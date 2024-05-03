@@ -2,7 +2,15 @@ let fs = require('fs')
 
 const args = {
 	jsonFile: process.argv[2] ?? 'dataset-1',
-	barWidth: 10
+	barWidth: process.argv[3] ?? 10
+}
+
+const validateArgs = () => {
+	const parsedBarWidth = Number(args.barWidth)
+	if (isNaN(parsedBarWidth) || parsedBarWidth <= 0) {
+		console.error('Invalid bar width. Please provide a positive number.')
+		process.exit(1)
+	}
 }
 
 const readJsonFile = (jsonFile) => {
@@ -56,5 +64,6 @@ const customRound = (value) => {
 	else return Math.round(value * 10) / 10
 }
 
+validateArgs()
 const chartData = readJsonFile(args.jsonFile)
 plot(chartData)
