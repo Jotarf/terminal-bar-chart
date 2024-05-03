@@ -1,6 +1,8 @@
 let fs = require('fs')
 
-const jsonFile = process.argv[2] ?? 'dataset-1'
+const args = {
+	jsonFile: process.argv[2] ?? 'dataset-1'
+}
 
 const readJsonFile = (jsonFile) => {
 	try {
@@ -12,4 +14,5 @@ const readJsonFile = (jsonFile) => {
 	}
 }
 
-const chartData = readJsonFile(jsonFile)
+const chartData = readJsonFile(args.jsonFile)
+console.log(chartData)
