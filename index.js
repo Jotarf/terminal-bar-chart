@@ -2,13 +2,26 @@ let fs = require('fs')
 
 const args = {
 	jsonFile: process.argv[2] ?? 'dataset-1',
-	barWidth: process.argv[3] ?? 10
+	barWidth: process.argv[3] ?? 10,
+	normalizationValue: process.argv[4]
 }
 
 const validateArgs = () => {
 	const parsedBarWidth = Number(args.barWidth)
+	const parsedNormalizationValue = Number(args.normalizationValue)
+
 	if (isNaN(parsedBarWidth) || parsedBarWidth <= 0) {
 		console.error('Invalid bar width. Please provide a positive number.')
+		process.exit(1)
+	}
+
+	if (
+		args.normalizationValue &&
+		(isNaN(parsedNormalizationValue) || parsedNormalizationValue <= 0)
+	) {
+		console.error(
+			'Invalid normalization value. Please provide a positive number.'
+		)
 		process.exit(1)
 	}
 }
@@ -28,7 +41,7 @@ const plot = (chartData) => {
 	const chartValues = Object.values(chartData)
 	const barLabels = Object.keys(chartData).map((label) => label.padEnd(10))
 	const maxValue = Math.max(...chartValues)
-	const normalizedMaxValue = Math.ceil(maxValue / 10) * 10
+	const normalizedMaxValue = args.normalizationValue ?? maxValue
 	const linesByBar = chartValues.map((value) =>
 		customRound((value * normalizedMaxValue) / maxValue)
 	)
