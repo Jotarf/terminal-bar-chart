@@ -46,25 +46,31 @@ const plot = (chartData) => {
 		customRound((value * normalizedMaxValue) / maxValue)
 	)
 
+	let lineValues = []
+
+	//First top values
+	lineValues = chartValues.map((value) => {
+		const isValueMax = value === maxValue
+		if (isValueMax) return value.toFixed(2).toString().padEnd(args.barWidth)
+		else return ' '.repeat(args.barWidth)
+	})
+
+	console.log(...lineValues)
+
 	for (let i = normalizedMaxValue; i >= 1; i--) {
-		let lineValues = []
+		lineValues = []
 
 		linesByBar.forEach((value, index) => {
 			const isTopLineBar = Math.ceil(value) === i
-			if (isTopLineBar)
-				lineValues.push(chartValues[index].toString().padEnd(args.barWidth))
-			else lineValues.push(' '.repeat(args.barWidth))
-		})
-
-		console.log(...lineValues)
-
-		lineValues = []
-
-		linesByBar.forEach((value) => {
 			const differenceBetweenValueAndI = 1 - Math.abs(value - i)
-			const shouldFormatLine = value % 1 !== 0 && i === Math.ceil(value)
+			const shouldFormatLine = value % 1 !== 0 && isTopLineBar
+			const shouldAddTopValue = Math.ceil(value) + 1 === i
 
-			if (shouldFormatLine)
+			if (shouldAddTopValue)
+				lineValues.push(
+					chartValues[index].toFixed(2).toString().padEnd(args.barWidth)
+				)
+			else if (shouldFormatLine)
 				lineValues.push(
 					'.'
 						.repeat(args.barWidth * differenceBetweenValueAndI)
