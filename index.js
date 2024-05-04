@@ -47,7 +47,18 @@ const plot = (chartData) => {
 	)
 
 	for (let i = normalizedMaxValue; i >= 1; i--) {
-		const lineValues = []
+		let lineValues = []
+
+		linesByBar.forEach((value, index) => {
+			const isTopLineBar = Math.ceil(value) === i
+			if (isTopLineBar)
+				lineValues.push(chartValues[index].toString().padEnd(args.barWidth))
+			else lineValues.push(' '.repeat(args.barWidth))
+		})
+
+		console.log(...lineValues)
+
+		lineValues = []
 
 		linesByBar.forEach((value) => {
 			const differenceBetweenValueAndI = 1 - Math.abs(value - i)
