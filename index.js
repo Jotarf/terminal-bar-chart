@@ -40,33 +40,84 @@ const plot = (chartData) => {
 	console.log('Plotting chart...')
 	const chartValues = Object.values(chartData)
 	const barLabels = Object.keys(chartData).map((label) => label.padEnd(10))
-	const maxValue = Math.max(...chartValues)
+	// Dataset normalization
+	const maxPositiveValue = Math.max(...chartValues)
+	const minNegativeValue = Math.min(...chartValues)
+	const maxValue = Math.max(maxPositiveValue, Math.abs(minNegativeValue))
 	const normalizedMaxValue = args.normalizationValue ?? maxValue
-	const linesByBar = chartValues.map((value) =>
-		customRound((value * normalizedMaxValue) / maxValue)
+	const normalizedPositiveValue =
+		maxValue === maxPositiveValue
+			? args.normalizationValue ?? maxValue
+			: (maxPositiveValue * normalizedMaxValue) / maxValue
+
+	const normalizedNegativeValue =
+		maxValue === Math.abs(minNegativeValue)
+			? (args.normalizationValue ?? maxValue) * -1
+			: (minNegativeValue * normalizedMaxValue) / maxValue
+	const linesByBar = chartValues.map(
+		(value) => (value * normalizedMaxValue) / maxValue
 	)
 
 	let lineValues = []
 
-	//First top values
-	lineValues = chartValues.map((value) => {
-		const isValueMax = value === maxValue
-		if (isValueMax) return value.toFixed(2).toString().padEnd(args.barWidth)
-		else return ' '.repeat(args.barWidth)
-	})
+	if (maxPositiveValue > 0) {
+		//First top values
+		lineValues = chartValues.map((value) => {
+			const isValueMax = value === maxPositiveValue
+			if (isValueMax) return value.toFixed(2).toString().padEnd(args.barWidth)
+			else return ' '.repeat(args.barWidth)
+		})
 
-	console.log(...lineValues)
+		console.log(...lineValues)
 
-	for (let i = normalizedMaxValue; i >= 1; i--) {
+		// Positive Bars
+		for (let i = normalizedPositiveValue; i >= 1; i--) {
+			lineValues = []
+
+			linesByBar.forEach((value, index) => {
+				const isTopLineBar = Math.ceil(value) === i
+				const differenceBetweenValueAndI = 1 - Math.abs(value - i)
+				const shouldFormatLine = value % 1 !== 0 && isTopLineBar
+				const shouldAddTopValue = Math.ceil(value) + 1 === i
+
+				if (shouldAddTopValue)
+					lineValues.push(
+						chartValues[index].toFixed(2).toString().padEnd(args.barWidth)
+					)
+				else if (shouldFormatLine)
+					lineValues.push(
+						'.'
+							.repeat(
+								args.barWidth * differenceBetweenValueAndI >= 1
+									? args.barWidth * differenceBetweenValueAndI
+									: 1
+							)
+							.padEnd(args.barWidth)
+					)
+				else if (value >= i) lineValues.push('.'.repeat(args.barWidth))
+				else lineValues.push(' '.repeat(args.barWidth))
+			})
+
+			console.log(...lineValues)
+		}
+	}
+
+	// Bar labels
+	console.log(...barLabels)
+
+	if (minNegativeValue >= 0) return
+
+	// Negative Bars
+	for (let i = -1; i >= normalizedNegativeValue; i--) {
 		lineValues = []
 
 		linesByBar.forEach((value, index) => {
-			const isTopLineBar = Math.ceil(value) === i
+			const isBottomLineBar = Math.floor(value) === i
 			const differenceBetweenValueAndI = 1 - Math.abs(value - i)
-			const shouldFormatLine = value % 1 !== 0 && isTopLineBar
-			const shouldAddTopValue = Math.ceil(value) + 1 === i
+			const shouldFormatLine = value % 1 !== 0 && isBottomLineBar
+			const shouldAddBottomValue = Math.floor(value) - 1 === i
 
-			if (shouldAddTopValue)
+			if (shouldAddBottomValue)
 				lineValues.push(
 					chartValues[index].toFixed(2).toString().padEnd(args.barWidth)
 				)
@@ -80,22 +131,21 @@ const plot = (chartData) => {
 						)
 						.padEnd(args.barWidth)
 				)
-			else if (value >= i) lineValues.push('.'.repeat(args.barWidth))
+			else if (value <= i) lineValues.push('.'.repeat(args.barWidth))
 			else lineValues.push(' '.repeat(args.barWidth))
 		})
 
 		console.log(...lineValues)
 	}
-	console.log(...barLabels)
-}
 
-// 4.9 => 5
-// 4.123 => 4.1
-// 4.567 => 4.5
-const customRound = (value) => {
-	const decimalPart = value % 1
-	if (decimalPart >= 0.9) return Math.ceil(value)
-	else return Math.round(value * 10) / 10
+	//Last bottom values
+	lineValues = chartValues.map((value) => {
+		const isValueMin = value === minNegativeValue
+		if (isValueMin) return value.toFixed(2).toString().padEnd(args.barWidth)
+		else return ' '.repeat(args.barWidth)
+	})
+
+	console.log(...lineValues)
 }
 
 validateArgs()
