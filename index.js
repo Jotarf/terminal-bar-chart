@@ -80,7 +80,7 @@ const plot = (chartData) => {
 				const shouldFormatLine = value % 1 !== 0 && isTopLineBar
 				const shouldAddTopValue = Math.ceil(value) + 1 === i
 
-				if (shouldAddTopValue)
+				if (shouldAddTopValue && value > 0)
 					lineValues.push(
 						chartValues[index].toFixed(2).toString().padEnd(args.barWidth)
 					)
