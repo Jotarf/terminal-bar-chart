@@ -73,7 +73,11 @@ const plot = (chartData) => {
 			else if (shouldFormatLine)
 				lineValues.push(
 					'.'
-						.repeat(args.barWidth * differenceBetweenValueAndI)
+						.repeat(
+							args.barWidth * differenceBetweenValueAndI >= 1
+								? args.barWidth * differenceBetweenValueAndI
+								: 1
+						)
 						.padEnd(args.barWidth)
 				)
 			else if (value >= i) lineValues.push('.'.repeat(args.barWidth))
