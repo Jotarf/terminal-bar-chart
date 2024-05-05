@@ -2,8 +2,9 @@ let fs = require('fs')
 
 const args = {
 	jsonFile: process.argv[2] ?? 'dataset-1',
-	barWidth: process.argv[3] ?? 10,
-	normalizationValue: process.argv[4]
+	chartType: process.argv[3] ?? 'vertical',
+	normalizationValue: process.argv[4],
+	barWidth: process.argv[5] ?? 10
 }
 
 const validateArgs = () => {
@@ -24,6 +25,13 @@ const validateArgs = () => {
 		)
 		process.exit(1)
 	}
+
+	if (args.chartType !== 'vertical' && args.chartType !== 'horizontal') {
+		console.error(
+			'Invalid chart type. Please provide "vertical" or "horizontal".'
+		)
+		process.exit(1)
+	}
 }
 
 const readJsonFile = (jsonFile) => {
@@ -36,8 +44,8 @@ const readJsonFile = (jsonFile) => {
 	}
 }
 
-const plot = (chartData) => {
-	console.log('Plotting chart...')
+const plotVerticalChart = (chartData) => {
+	console.log('Vertical Chart:')
 	const chartValues = Object.values(chartData)
 	const barLabels = Object.keys(chartData).map((label) => label.padEnd(10))
 	// Dataset normalization
@@ -148,6 +156,60 @@ const plot = (chartData) => {
 	console.log(...lineValues)
 }
 
+const plotHorizontalChart = (chartData) => {
+	console.log('Horizontal Chart:')
+	const chartValues = Object.values(chartData)
+	const barLabels = Object.keys(chartData).map((label) => label.padEnd(10))
+	// Dataset normalization
+	const maxPositiveValue = Math.max(...chartValues)
+	const minNegativeValue = Math.min(...chartValues)
+	const maxValue = Math.max(maxPositiveValue, Math.abs(minNegativeValue))
+	const normalizedMaxValue = args.normalizationValue ?? maxValue
+	const normalizedPositiveValue =
+		maxValue === maxPositiveValue
+			? args.normalizationValue ?? maxValue
+			: (maxPositiveValue * normalizedMaxValue) / maxValue
+
+	const normalizedNegativeValue =
+		maxValue === Math.abs(minNegativeValue)
+			? (args.normalizationValue ?? maxValue) * -1
+			: (minNegativeValue * normalizedMaxValue) / maxValue
+	const linesByBar = chartValues.map(
+		(value) => (value * normalizedMaxValue) / maxValue
+	)
+
+	const existLeftValues = chartValues.some((value) => value < 0)
+	const existRightValues = chartValues.some((value) => value >= 0)
+
+	linesByBar.forEach((value, index) => {
+		value = Math.round(Math.abs(value))
+		const existLeftValue = chartValues[index] < 0
+		const leftLabel = existLeftValue ? chartValues[index] : ''
+		const leftLines = existLeftValue ? '|'.repeat(value) : ' '.repeat(value)
+		const leftChartSide = `${leftLabel} ${leftLines} - `.padStart(
+			Math.abs(normalizedNegativeValue) + 10
+		)
+		const label = `${barLabels[index].padEnd(args.barWidth)}`
+		const existRightValue = chartValues[index] >= 0
+		const rightLabel = existRightValue ? chartValues[index] : ''
+		const rightLines = existRightValue ? '|'.repeat(value) : ' '.repeat(value)
+		const rightChartSide = ` - ${rightLines} ${rightLabel}`.padEnd(
+			normalizedPositiveValue
+		)
+
+		console.log(
+			existLeftValues ? leftChartSide : '',
+			label,
+			existRightValues ? rightChartSide : ''
+		)
+	})
+}
+
+const plotHandlers = {
+	vertical: plotVerticalChart,
+	horizontal: plotHorizontalChart
+}
+
 validateArgs()
 const chartData = readJsonFile(args.jsonFile)
-plot(chartData)
+plotHandlers[args.chartType](chartData)
